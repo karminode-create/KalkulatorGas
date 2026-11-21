@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#176b3a">
+<title>Kalkulator Data AIR & GAS</title>
+<style>
+:root{--green:#176b3a;--green2:#e8f4eb;--yellow:#fff5c2;--gold:#f5e6a0;--ink:#17231b;--muted:#66736a;--line:#dce5de;--bg:#f4f7f4;--white:#fff;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(135deg,#145b32,#21864b);color:#fff;padding:22px 18px 26px;border-radius:0 0 22px 22px}
+header h1{margin:0;font-size:22px}header p{margin:5px 0 0;color:#e2f2e7;font-size:13px}
+main{max-width:760px;margin:0 auto;padding:16px 14px 40px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:14px;box-shadow:0 3px 12px #163b1e0a}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px;font-weight:750;font-size:16px}
+.small{font-size:12px;color:var(--muted)}
+.date-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+input{font:inherit}
+input[type=date],input[type=number],input[type=text]{width:100%;min-width:0;border:1px solid #cbd8ce;border-radius:10px;padding:11px 10px;background:#fff;color:var(--ink)}
+input:focus{outline:2px solid #8cc69d;border-color:var(--green)}
+.date-row input{max-width:190px}
+.grid-head,.data-row{display:grid;grid-template-columns:1.05fr 1fr 1fr .9fr;gap:7px;align-items:center}
+.grid-head{font-size:11px;color:var(--muted);font-weight:700;padding:0 2px 7px}
+.data-row{padding:10px 0;border-top:1px solid var(--line)}
+.data-row:first-of-type{border-top:0}
+.name{font-weight:750;font-size:13px}
+.data-row input{padding:10px 7px;font-size:14px}
+.result{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;font-size:14px;overflow-wrap:anywhere}
+.air4{background:#edf6ed}.air3{background:#e3f0e3}.am{background:#fff8d8}.gas{background:#fff1bf}
+.result-card{background:#f0f7f1;border:1px solid #cfe4d2}
+.big-result{font-size:27px;font-weight:850;color:var(--green);font-variant-numeric:tabular-nums}
+.formula{color:var(--muted);font-size:12px}
+.total-list{display:grid;gap:9px}
+.total-line{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.total-line strong{font-variant-numeric:tabular-nums}
+.total-final{padding-top:10px;border-top:1px solid var(--line);font-weight:800}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+button{border:0;border-radius:11px;padding:12px 13px;font:700 14px system-ui;cursor:pointer}
+.primary{background:var(--green);color:white}.secondary{background:#eaf1eb;color:#20472c}.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}.danger{color:var(--red);background:#fff0ee;border:1px solid #f3d0cc}
+button:active{transform:scale(.99)}
+.history-item{border-top:1px solid var(--line);padding:11px 0}
+.history-item:first-child{border-top:0}
+.history-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.history-date{font-weight:750}.history-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.history-actions{display:flex;gap:7px;margin-top:8px}.history-actions button{padding:7px 10px;font-size:12px}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 0}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+#exportPanel{display:none}#exportText{width:100%;min-height:190px;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 ui-monospace,monospace;background:#fbfdfb;color:var(--ink)}.status-box{padding:10px;border-radius:10px;background:#f1f6f2;color:#285b36;font-size:13px;margin-top:10px}.status-box.warn{background:#fff6df;color:#795400}
+@media(max-width:420px){main{padding:13px 10px}.card{padding:12px}.grid-head,.data-row{grid-template-columns:.9fr 1fr 1fr .8fr;gap:5px}.name{font-size:12px}.data-row input{font-size:12px;padding:9px 5px}.result{font-size:12px}.big-result{font-size:24px}}
+</style>
+</head>
+<body>
+<header><h1>⌁ Kalkulator Data AIR & GAS</h1><p>Perhitungan harian otomatis • Riwayat • Ekspor Excel</p></header>
+<main>
+<section class="card">
+  <div class="section-title"><span>Tanggal perhitungan</span><span class="small" id="saveStatus">Siap digunakan</span></div>
+  <div class="date-row"><input id="workDate" type="date" aria-label="Tanggal perhitungan"><span class="small">Pilih tanggal pencatatan</span></div>
+</section>
+<section class="card">
+  <div class="section-title"><span>Input data</span><span class="small">Hasil F = D − E</span></div>
+  <div class="grid-head"><span>Data</span><span>Nilai 1 (D)</span><span>Nilai 2 (E)</span><span style="text-align:right">Hasil (F)</span></div>
+  <div id="rows"></div>
+  <div class="note">Masukkan angka pada kolom D dan E. Kolom hasil F dihitung otomatis.</div>
+</section>
+<section class="card result-card">
+  <div class="section-title"><span>Hasil kolom G</span><span class="small">F9 − F8</span></div>
+  <div class="formula" id="gFormula">802 − 154</div>
+  <div class="big-result" id="gResult">648</div>
+  <div class="small">Selisih AIR 3# dikurangi AIR 4#</div>
+</section>
+<section class="card">
+  <div class="section-title"><span>Rekapitulasi total</span></div>
+  <div class="total-list">
+    <div class="total-line"><span class="small">Total nilai 1 (D)</span><strong id="totalD">0</strong></div>
+    <div class="total-line"><span class="small">Total nilai 2 (E)</span><strong id="totalE">0</strong></div>
+    <div class="total-line total-final"><span>Total hasil (F)</span><strong id="totalF">0</strong></div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="saveBtn">Simpan riwayat</button>
+    <button class="secondary" id="exportBtn">Ekspor CSV / Excel</button>
+    <button class="outline" id="resetBtn">Reset angka</button>
+    <button class="outline" id="newBtn">Data baru</button>
+  </div>
+  <div class="note">Simpan riwayat untuk merekam hasil berdasarkan tanggal. Ekspor CSV dapat dibuka dengan Excel atau WPS Spreadsheet.</div>
+  <div id="appStatus" class="status-box" role="status">Memeriksa dukungan penyimpanan...</div>
+  <div id="exportPanel" class="card" style="margin:14px 0 0;padding:12px">
+    <div class="section-title"><span>File CSV siap disalin</span><button class="outline" id="closeExport" style="padding:6px 10px">Tutup</button></div>
+    <textarea id="exportText" readonly></textarea>
+    <div class="actions"><button class="primary" id="shareExport">Bagikan file</button><button class="secondary" id="copyExport">Salin CSV</button></div>
+    <div class="note">Jika unduhan tidak muncul di Preview Koder, gunakan Bagikan file atau tekan lama teks CSV lalu Salin, kemudian tempel ke Excel/WPS.</div>
+  </div>
+</section>
+<section class="card">
+  <div class="section-title"><span>Riwayat perhitungan</span><button class="danger" id="clearHistory" style="padding:7px 9px;font-size:12px">Hapus semua</button></div>
+  <div id="history"><div class="empty">Belum ada riwayat tersimpan.</div></div>
+</section>
+</main>
+<script>
+const defaults=[
+ {name:"AIR 4#",a:"0",b:"0",cls:"air4"},
+ {name:"AIR 3#",a:"0",b:"0",cls:"air3"},
+ {name:"AM",a:"0",b:"0",cls:"am"},
+ {name:"GAS",a:"0",b:"0",cls:"gas"}
+];
+let data=defaults.map(x=>({...x}));
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('id-ID',{maximumFractionDigits:2});
+const num=v=>String(v).trim()===''?0:(Number(v)||0);
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+// --- PENYIMPANAN AMAN UNTUK PREVIEW KODER (IPAD) ---
+const memoriCadangan = {};
+let dukungStorage = false;
+try {
+  const tes = "__tes_koder__";
+  window.localStorage.setItem(tes, "1");
+  window.localStorage.removeItem(tes);
+  dukungStorage = true;
+} catch (e) {
+  dukungStorage = false;
+}
+
+function bacaData(kunci) {
+  try {
+    return dukungStorage ? window.localStorage.getItem(kunci) : (memoriCadangan[kunci] || null);
+  } catch (e) {
+    return memoriCadangan[kunci] || null;
+  }
+}
+
+function tulisData(kunci, nilai) {
+  try {
+    if (dukungStorage) window.localStorage.setItem(kunci, nilai);
+    else memoriCadangan[kunci] = nilai;
+  } catch (e) {
+    memoriCadangan[kunci] = nilai;
+  }
+}
+
+function perbaruiStatusStorage() {
+  const el = $('appStatus');
+  if (dukungStorage) {
+    el.className = 'status-box';
+    el.textContent = 'Penyimpanan browser aktif. Riwayat tersimpan otomatis.';
+  } else {
+    el.className = 'status-box warn';
+    el.textContent = 'Mode Preview Koder (Penyimpanan sementara): Riwayat aktif selama halaman terbuka. Gunakan Ekspor CSV untuk menyimpan permanen.';
+  }
+}
+// ----------------------------------------------------
+
+function dateToday(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+$('workDate').value=dateToday();
+
+function results(){return data.map(r=>num(r.a)-num(r.b))}
+function totals(){
+  const f=results();
+  return {
+    d:data.reduce((s,r)=>s+num(r.a),0),
+    e:data.reduce((s,r)=>s+num(r.b),0),
+    f:f.reduce((s,n)=>s+n,0),
+    g:f[1]-f[0]
+  };
+}
+
+function renderRows(){
+ $('rows').innerHTML=data.map((r,i)=>`<div class="data-row ${r.cls}">
+ <div class="name">${r.name}</div>
+ <input type="number" inputmode="decimal" step="any" data-i="${i}" data-k="a" aria-label="${r.name} nilai 1" value="${escapeHtml(r.a)}">
+ <input type="number" inputmode="numeric" step="any" data-i="${i}" data-k="b" aria-label="${r.name} nilai 2" value="${escapeHtml(r.b)}">
+ <div class="result" id="res-${i}">${fmt(num(r.a)-num(r.b))}</div>
+ </div>`).join('');
+
+ $('rows').querySelectorAll('input').forEach(inp=>{
+   inp.addEventListener('input',e=>{
+     const i=Number(e.target.dataset.i), k=e.target.dataset.k;
+     data[i][k]=e.target.value;
+     $('res-'+i).textContent=fmt(num(data[i].a)-num(data[i].b));
+     updateTotals();
+   });
+ });
+ updateTotals();
+}
+
+function updateTotals(){
+  const f=results(), t=totals();
+  $('gFormula').textContent=`${fmt(f[1])} − ${fmt(f[0])}`;
+  $('gResult').textContent=fmt(t.g);
+  $('totalD').textContent=fmt(t.d);
+  $('totalE').textContent=fmt(t.e);
+  $('totalF').textContent=fmt(t.f);
+}
+
+const STORAGE_KEY = 'air_gas_history_v1';
+function getHistory(){
+  try { return JSON.parse(bacaData(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+}
+function setHistory(list){
+  tulisData(STORAGE_KEY, JSON.stringify(list));
+  renderHistory();
+}
+
+function renderHistory(){
+  const list = getHistory();
+  if(!list.length){
+    $('history').innerHTML='<div class="empty">Belum ada riwayat tersimpan.</div>';
+    return;
+  }
+  $('history').innerHTML = list.map((item, idx)=>`
+    <div class="history-item">
+      <div class="history-top">
+        <span class="history-date">${escapeHtml(item.date)}</span>
+        <strong>Hasil G: ${fmt(item.totals.g)}</strong>
+      </div>
+      <div class="history-meta">Total D: ${fmt(item.totals.d)} • Total E: ${fmt(item.totals.e)} • Total F: ${fmt(item.totals.f)}</div>
+      <div class="history-actions">
+        <button class="secondary" onclick="muatRiwayat(${idx})">Muat</button>
+        <button class="danger" onclick="hapusRiwayat(${idx})">Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.muatRiwayat = idx => {
+  const item = getHistory()[idx];
+  if(!item) return;
+  $('workDate').value = item.date;
+  data = item.rows.map(r=>({...r}));
+  renderRows();
+  $('saveStatus').textContent = 'Riwayat dimuat';
+};
+
+window.hapusRiwayat = idx => {
+  const list = getHistory();
+  list.splice(idx, 1);
+  setHistory(list);
+};
+
+$('saveBtn').onclick = () => {
+  const date = $('workDate').value || dateToday();
+  const list = getHistory().filter(x => x.date !== date);
+  list.unshift({ date, rows: data.map(r=>({...r})), totals: totals() });
+  setHistory(list);
+  $('saveStatus').textContent = 'Tersimpan (' + date + ')';
+};
+
+$('resetBtn').onclick = () => {
+  data.forEach(r => { r.a = "0"; r.b = "0"; });
+  renderRows();
+  $('saveStatus').textContent = 'Angka direset';
+};
+
+$('newBtn').onclick = () => {
+  $('workDate').value = dateToday();
+  data = defaults.map(x=>({...x}));
+  renderRows();
+  $('saveStatus').textContent = 'Data baru siap';
+};
+
+$('clearHistory').onclick = () => {
+  setHistory([]);
+};
+
+function buatCSV(){
+  const t = totals(), f = results(), date = $('workDate').value || dateToday();
+  const baris = [
+    ['Tanggal', date],
+    [],
+    ['Data', 'Nilai 1 (D)', 'Nilai 2 (E)', 'Hasil (F)'],
+    ...data.map((r,i)=>[r.name, num(r.a), num(r.b), f[i]]),
+    [],
+    ['Total', t.d, t.e, t.f],
+    ['Hasil Kolom G (AIR 3# - AIR 4#)', t.g]
+  ];
+  return baris.map(b => b.join(',')).join('\n');
+}
+
+$('exportBtn').onclick = () => {
+  $('exportText').value = buatCSV();
+  $('exportPanel').style.display = 'block';
+};
+
+$('closeExport').onclick = () => {
+  $('exportPanel').style.display = 'none';
+};
+
+$('copyExport').onclick = async () => {
+  const teks = $('exportText').value;
+  try {
+    await navigator.clipboard.writeText(teks);
+    $('saveStatus').textContent = 'CSV disalin!';
+  } catch(e) {
+    $('exportText').select();
+    document.execCommand('copy');
+    $('saveStatus').textContent = 'CSV disalin!';
+  }
+};
+
+$('shareExport').onclick = async () => {
+  const teks = $('exportText').value;
+  const date = $('workDate').value || dateToday();
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `Data AIR & GAS ${date}`, text: teks });
+    } catch(e) {}
+  } else {
+    $('copyExport').click();
+  }
+};
+
+perbaruiStatusStorage();
+renderRows();
+renderHistory();
+</script>
+</body>
+</html>
